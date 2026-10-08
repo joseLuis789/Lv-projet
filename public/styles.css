@@ -96,6 +96,22 @@ const renderTransactions = (items) => {
     .join('');
 };
 
+const renderWallet = (wallet) => {
+  const walletCard = document.getElementById('wallet-card');
+  const statusLabel = document.getElementById('wallet-status');
+
+  walletCard.innerHTML = `
+    <div class="wallet-balance">
+      <span class="wallet-label">Saldo disponible</span>
+      <strong>$${Number(wallet.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+      <small>${wallet.currency}</small>
+    </div>
+  `;
+
+  statusLabel.textContent = wallet.stripeEnabled ? 'Stripe activo' : 'Modo local';
+  statusLabel.className = `pill ${wallet.stripeEnabled ? 'positive' : 'neutral'}`;
+};
+
 const loadDashboard = async () => {
   try {
     const sessionRes = await fetch('/api/auth/session');
@@ -107,22 +123,25 @@ const loadDashboard = async () => {
     const session = await sessionRes.json();
     renderUserInfo(session.user);
 
-    const [overviewRes, portfolioRes, marketsRes, transactionsRes] = await Promise.all([
+    const [overviewRes, portfolioRes, marketsRes, transactionsRes, walletRes] = await Promise.all([
       fetch('/api/overview'),
       fetch('/api/portfolio'),
       fetch('/api/markets'),
-      fetch('/api/transactions')
+      fetch('/api/transactions'),
+      fetch('/api/wallet')
     ]);
 
     const overview = await overviewRes.json();
     const portfolio = await portfolioRes.json();
     const markets = await marketsRes.json();
     const transactions = await transactionsRes.json();
+    const wallet = await walletRes.json();
 
     renderStats(overview);
     renderPortfolio(portfolio);
     renderMarkets(markets);
     renderTransactions(transactions);
+    renderWallet(wallet);
   } catch (error) {
     console.error('Error al cargar dashboard:', error);
   }
@@ -135,6 +154,40 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     window.location.href = data.redirectTo || '/login';
   } catch (error) {
     console.error('Error al cerrar sesión:', error);
+  }
+});
+
+document.getElementById('topUpBtn').addEventListener('click', async () => {
+  const amountInput = document.getElementById('walletAmount');
+  const amount = Number(amountInput.value || 0);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert('Debes ingresar un monto válido');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/wallet/topup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'No se pudo recargar la billetera');
+    }
+
+    if (data.mode === 'stripe' && data.sessionUrl) {
+      window.location.href = data.sessionUrl;
+      return;
+    }
+
+    alert(data.message || 'Billetera recargada correctamente');
+    window.location.reload();
+  } catch (error) {
+    alert(error.message);
   }
 });
 
