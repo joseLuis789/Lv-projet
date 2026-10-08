@@ -1,12 +1,100 @@
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const USERS = [
+  {
+    email: 'admin@agua.neon',
+    password: 'AguaNeon2026!',
+    name: 'Administrador'
+  }
+];
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: 'agua-neon-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    maxAge: 60 * 60 * 1000
+  }
+}));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/api/overview', (req, res) => {
+const requireAuth = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+  next();
+};
+
+app.get('/login', (req, res) => {
+  if (req.session.user) {
+    return res.redirect('/');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email y contraseña requeridos.' });
+  }
+
+  const user = USERS.find(
+    (item) => item.email.toLowerCase() === String(email).trim().toLowerCase() && item.password === password
+  );
+
+  if (!user) {
+    return res.status(401).json({ error: 'Credenciales inválidas.' });
+  }
+
+  req.session.user = {
+    email: user.email,
+    name: user.name
+  };
+
+  return res.json({
+    success: true,
+    user: req.session.user,
+    redirectTo: '/'
+  });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.json({ success: true, redirectTo: '/login' });
+  });
+});
+
+app.get('/api/auth/session', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ authenticated: false });
+  }
+
+  return res.json({
+    authenticated: true,
+    user: req.session.user
+  });
+});
+
+app.get('/', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/api/overview', requireAuth, (req, res) => {
   res.json({
     balance: 245680.92,
     monthlyGrowth: 18.4,
@@ -18,7 +106,7 @@ app.get('/api/overview', (req, res) => {
   });
 });
 
-app.get('/api/portfolio', (req, res) => {
+app.get('/api/portfolio', requireAuth, (req, res) => {
   res.json([
     { name: 'LV Token', amount: 34500, change: 8.7, value: 17640 },
     { name: 'Aqua Stable', amount: 18400, change: 2.1, value: 18400 },
@@ -27,7 +115,7 @@ app.get('/api/portfolio', (req, res) => {
   ]);
 });
 
-app.get('/api/markets', (req, res) => {
+app.get('/api/markets', requireAuth, (req, res) => {
   res.json([
     { symbol: 'LV3', price: 4.82, change: 3.2, volume: '2.3M' },
     { symbol: 'AQUA', price: 1.01, change: 0.9, volume: '980K' },
@@ -36,7 +124,7 @@ app.get('/api/markets', (req, res) => {
   ]);
 });
 
-app.get('/api/transactions', (req, res) => {
+app.get('/api/transactions', requireAuth, (req, res) => {
   res.json([
     { id: 'TX-1042', type: 'Ingreso', asset: 'LV Token', amount: '+$12,400', time: 'Hace 14 min' },
     { id: 'TX-1041', type: 'Venta', asset: 'Aqua Stable', amount: '-$3,200', time: 'Hace 42 min' },
@@ -46,9 +134,14 @@ app.get('/api/transactions', (req, res) => {
 });
 
 app.get('*', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
   console.log(`Agua Neon running on http://localhost:${PORT}`);
+  console.log('Login user: admin@agua.neon');
+  console.log('Password: AguaNeon2026!');
 });
