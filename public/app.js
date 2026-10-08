@@ -1,11 +1,24 @@
+const renderUserInfo = (user) => {
+  const container = document.getElementById('userInfo');
+  container.innerHTML = `
+    <div class="user-profile">
+      <img src="${user.avatar}" alt="${user.name}" class="user-avatar" />
+      <div>
+        <p class="user-name">${user.name}</p>
+        <p class="user-email">${user.email}</p>
+      </div>
+    </div>
+  `;
+};
+
 const renderStats = (data) => {
   const statsGrid = document.getElementById('stats-grid');
 
   const cards = [
-    { label: 'Balance total', value: `$${data.balance.toLocaleString()}`, trend: '+12.8%' },
-    { label: 'Reserva', value: `$${data.reserve.toLocaleString()}`, trend: '+4.2%' },
-    { label: 'Cuentas activas', value: data.activeAccounts, trend: '+3' },
-    { label: 'Cash Flow', value: `$${data.cashFlow.toLocaleString()}`, trend: '+8.1%' }
+    { label: 'Balance total', value: `$${Math.round(data.balance).toLocaleString()}`, trend: `+${data.monthlyGrowth}%` },
+    { label: 'Invertido', value: `$${Math.round(data.totalInvested).toLocaleString()}`, trend: '+4.2%' },
+    { label: 'Activos', value: data.activeAccounts, trend: '+3' },
+    { label: 'Ganancia/Pérdida', value: `$${Math.round(data.gainLoss).toLocaleString()}`, trend: `+${data.monthlyGrowth}%` }
   ];
 
   statsGrid.innerHTML = cards
@@ -15,7 +28,7 @@ const renderStats = (data) => {
           <span class="stat-label">${card.label}</span>
           <div class="stat-value">
             <div class="value-number">${card.value}</div>
-            <span class="value-trend">${card.trend}</span>
+            <span class="value-trend ${parseFloat(card.trend) >= 0 ? '' : 'negative'}">${card.trend}</span>
           </div>
         </article>
       `
@@ -31,10 +44,10 @@ const renderPortfolio = (items) => {
         <div class="asset-item">
           <div class="asset-meta">
             <span class="asset-name">${item.name}</span>
-            <span class="asset-sub">${item.amount.toLocaleString()} unidades</span>
+            <span class="asset-sub">${item.amount.toLocaleString()} ${item.symbol}</span>
           </div>
           <div class="asset-value">
-            <div>${item.value.toLocaleString('es-AR', { style: 'currency', currency: 'USD' })}</div>
+            <div>$${Math.round(item.value).toLocaleString()}</div>
             <span class="${item.change >= 0 ? 'value-positive' : 'value-negative'}">${item.change >= 0 ? '+' : ''}${item.change}%</span>
           </div>
         </div>
@@ -51,7 +64,7 @@ const renderMarkets = (items) => {
         <div class="market-item">
           <div class="market-meta">
             <span class="market-symbol">${item.symbol}</span>
-            <span class="market-sub">Vol. ${item.volume}</span>
+            <span class="market-sub">${item.name}</span>
           </div>
           <div class="asset-value">
             <div class="market-price">$${item.price}</div>
@@ -74,7 +87,7 @@ const renderTransactions = (items) => {
             <span class="transaction-sub">${item.asset} · ${item.id}</span>
           </div>
           <div class="asset-value">
-            <div>${item.amount}</div>
+            <div>${item.amountDisplay}</div>
             <span class="transaction-sub">${item.time}</span>
           </div>
         </div>
@@ -85,10 +98,20 @@ const renderTransactions = (items) => {
 
 const loadDashboard = async () => {
   try {
-    const overviewRes = await fetch('/api/overview');
-    const portfolioRes = await fetch('/api/portfolio');
-    const marketsRes = await fetch('/api/markets');
-    const transactionsRes = await fetch('/api/transactions');
+    const sessionRes = await fetch('/api/auth/session');
+    if (!sessionRes.ok) {
+      window.location.href = '/login';
+      return;
+    }
+    const session = await sessionRes.json();
+    renderUserInfo(session.user);
+
+    const [overviewRes, portfolioRes, marketsRes, transactionsRes] = await Promise.all([
+      fetch('/api/overview'),
+      fetch('/api/portfolio'),
+      fetch('/api/markets'),
+      fetch('/api/transactions')
+    ]);
 
     const overview = await overviewRes.json();
     const portfolio = await portfolioRes.json();
@@ -101,8 +124,17 @@ const loadDashboard = async () => {
     renderTransactions(transactions);
   } catch (error) {
     console.error('Error al cargar dashboard:', error);
-    document.getElementById('stats-grid').innerHTML = '<div class="stat-card">No se pudo cargar la información.</div>';
   }
 };
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  try {
+    const res = await fetch('/api/auth/logout', { method: 'POST' });
+    const data = await res.json();
+    window.location.href = data.redirectTo || '/login';
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+  }
+});
 
 loadDashboard();

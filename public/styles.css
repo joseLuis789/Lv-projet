@@ -43,6 +43,8 @@ button, input {
   padding: 24px 18px;
   border-right: 1px solid var(--border);
   background: rgba(10, 17, 25, 0.9);
+  display: flex;
+  flex-direction: column;
 }
 
 .brand {
@@ -83,6 +85,7 @@ button, input {
   flex-direction: column;
   gap: 10px;
   margin-top: 18px;
+  flex: 1;
 }
 
 .nav-item {
@@ -102,8 +105,43 @@ button, input {
 }
 
 .mini-panel {
-  margin-top: 28px;
+  margin-top: auto;
   padding: 16px;
+}
+
+.user-info {
+  margin-bottom: 12px;
+}
+
+.user-profile {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(97, 243, 255, 0.3);
+}
+
+.user-name {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.user-email {
+  margin: 4px 0 0 0;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.logout-btn {
+  width: 100%;
+  margin-top: 12px;
+  color: var(--red);
 }
 
 .label {
@@ -124,6 +162,7 @@ button, input {
 
 .main-panel {
   padding: 24px 28px 32px;
+  overflow-y: auto;
 }
 
 .topbar {
@@ -149,6 +188,7 @@ button, input {
   border-radius: 10px;
   padding: 10px 16px;
   cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .ghost-btn {
@@ -157,10 +197,28 @@ button, input {
   border: 1px solid var(--border);
 }
 
+.ghost-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .primary-btn {
   background: linear-gradient(135deg, var(--cyan), var(--purple));
   color: #07131d;
   font-weight: 700;
+}
+
+.primary-btn:hover {
+  opacity: 0.9;
+}
+
+.text-btn {
+  background: transparent;
+  color: var(--cyan);
+  padding: 0;
+}
+
+.text-btn:hover {
+  color: var(--cyan-strong);
 }
 
 .stats-grid {
@@ -276,6 +334,14 @@ button, input {
   gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.asset-item:hover,
+.market-item:hover,
+.transaction-item:hover {
+  background: rgba(97, 243, 255, 0.04);
 }
 
 .asset-item:last-child,
@@ -345,12 +411,6 @@ button, input {
   color: var(--text-soft);
   font-size: 12px;
   text-align: center;
-}
-
-.text-btn {
-  background: transparent;
-  color: var(--cyan);
-  padding: 0;
 }
 
 .login-page {
@@ -480,5 +540,15 @@ button, input {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .top-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .ghost-btn,
+  .primary-btn {
+    width: 100%;
   }
 }

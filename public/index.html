@@ -21,18 +21,18 @@
         </div>
 
         <nav class="nav">
-          <a class="nav-item active" href="#">Overview</a>
-          <a class="nav-item" href="#">Portfolio</a>
-          <a class="nav-item" href="#">Markets</a>
-          <a class="nav-item" href="#">Transactions</a>
-          <a class="nav-item" href="#">Wallets</a>
-          <a class="nav-item" href="#">Security</a>
+          <a class="nav-item active" href="#overview">Overview</a>
+          <a class="nav-item" href="#portfolio">Portfolio</a>
+          <a class="nav-item" href="#markets">Markets</a>
+          <a class="nav-item" href="#transactions">Transactions</a>
+          <a class="nav-item" href="#wallets">Wallets</a>
+          <a class="nav-item" href="#security">Security</a>
         </nav>
 
         <div class="panel mini-panel">
-          <p class="label">Apertura del mercado</p>
-          <strong id="market-open">Abierto</strong>
-          <span class="status-dot"></span>
+          <p class="label">Sesión</p>
+          <div id="userInfo" class="user-info"></div>
+          <button id="logoutBtn" class="text-btn logout-btn">Cerrar sesión</button>
         </div>
       </aside>
 
@@ -44,7 +44,7 @@
           </div>
           <div class="top-actions">
             <button class="ghost-btn">Export</button>
-            <button class="primary-btn">Nuevo movimiento</button>
+            <button class="primary-btn">+ Nuevo movimiento</button>
           </div>
         </header>
 
@@ -54,7 +54,7 @@
           <div class="panel large-panel">
             <div class="panel-header">
               <h3>Portfolio</h3>
-              <span class="pill neutral">Q2</span>
+              <span class="pill neutral">4 activos</span>
             </div>
             <div id="portfolio-list" class="asset-list"></div>
           </div>
@@ -79,7 +79,7 @@
 
           <div class="panel">
             <div class="panel-header">
-              <h3>Flux de ingresos</h3>
+              <h3>Ingresos Q2</h3>
               <span class="pill positive">+12.4%</span>
             </div>
             <div class="chart-bars" aria-label="Gráfico de ingresos">
